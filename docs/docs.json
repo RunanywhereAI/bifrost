@@ -1482,6 +1482,7 @@
                   "GET /api/mcp-logs/filterdata",
                   "GET /api/mcp-logs/histogram",
                   "GET /api/mcp-logs/histogram/cost",
+                  "GET /api/mcp-logs/histogram/latency",
                   "GET /api/mcp-logs/histogram/top-tools"
                 ]
               },
