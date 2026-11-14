@@ -2196,7 +2196,7 @@ func TestToOpenAIChatRequest_WallyDropsTopKAndKeepsSmallCap(t *testing.T) {
 	converted := ToOpenAIChatRequest(schemas.NewBifrostContext(nil, schemas.NoDeadline), bifrostReq)
 	require.NotNil(t, converted)
 
-	wireJSON, err := json.Marshal(converted)
+	wireJSON, err := providerUtils.MarshalSorted(converted)
 	require.NoError(t, err)
 
 	var wire map[string]json.RawMessage
