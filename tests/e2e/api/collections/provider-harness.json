@@ -329605,6 +329605,49 @@
           }
         },
         {
+          "name": "/v1/chat/completions - top_k dropped and small output cap kept - wally/deepseek-v4.1-flash",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('top_k is not forwarded and a cap below 16 is honored', function () {",
+                  "  pm.expect(pm.response.code, 'failed: ' + pm.response.text()).to.eql(200);",
+                  "  var j = pm.response.json();",
+                  "  pm.expect(j.extra_fields.provider).to.eql('wally');",
+                  "  pm.expect(j.usage.completion_tokens, 'cap not honored: ' + pm.response.text()).to.be.at.most(5);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"wally/deepseek-v4.1-flash\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Count from 1 to 50.\"\n    }\n  ],\n  \"reasoning_effort\": \"none\",\n  \"top_k\": 40,\n  \"max_completion_tokens\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/chat/completions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "chat",
+                "completions"
+              ]
+            }
+          }
+        },
+        {
           "name": "/v1/chat/completions - function tool call - wally/deepseek-v4.1-flash",
           "event": [
             {

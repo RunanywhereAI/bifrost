@@ -2179,6 +2179,39 @@ func TestToOpenAIChatRequest_LegacyMaxTokensProvidersUseMaxTokensOnWire(t *testi
 	}
 }
 
+func TestToOpenAIChatRequest_WallyDropsTopKAndKeepsSmallCap(t *testing.T) {
+	bifrostReq := &schemas.BifrostChatRequest{
+		Provider: schemas.Wally,
+		Model:    "deepseek-v4.1-flash",
+		Input: []schemas.ChatMessage{{
+			Role:    schemas.ChatMessageRoleUser,
+			Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("hello")},
+		}},
+		Params: &schemas.ChatParameters{
+			MaxCompletionTokens: schemas.Ptr(5),
+			TopK:                schemas.Ptr(40),
+		},
+	}
+
+	converted := ToOpenAIChatRequest(schemas.NewBifrostContext(nil, schemas.NoDeadline), bifrostReq)
+	require.NotNil(t, converted)
+
+	wireJSON, err := json.Marshal(converted)
+	require.NoError(t, err)
+
+	var wire map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(wireJSON, &wire))
+	require.NotContains(t, wire, "top_k", "Wally rejects top_k: %s", wireJSON)
+	require.NotContains(t, wire, "max_completion_tokens")
+	var maxTokens int
+	require.NoError(t, json.Unmarshal(wire["max_tokens"], &maxTokens))
+	require.Equal(t, 5, maxTokens, "Wally cap below 16 must not be raised: %s", wireJSON)
+
+	// The caller's parameters are not mutated.
+	require.Equal(t, 40, *bifrostReq.Params.TopK)
+	require.Equal(t, 5, *bifrostReq.Params.MaxCompletionTokens)
+}
+
 // When a conversation switches from Gemini to OpenAI, Gemini's thoughtSignature is
 // embedded in the tool call_id as "<baseID>_ts_<sig>" and can exceed OpenAI's 64-char
 // limit. The chat converter must strip it to the base ID on the wire while leaving the
